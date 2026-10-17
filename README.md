@@ -39,7 +39,7 @@ A Flask web app wraps the full pipeline into a browser-based tool — no Python 
 
 **To run locally:**
 ```bash
-git clone https://github.com/sanjaychhapola/email-validation-system.git
+git clone https://github.com/SANJAYCHHAPOLA/email-validation-system.git
 cd email-validation-system
 pip install -r requirements.txt
 python app.py
