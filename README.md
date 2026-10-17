@@ -44,8 +44,3 @@ cd email-validation-system
 pip install -r requirements.txt
 python app.py
 # Open: http://localhost:5000
-```
-
----
-
-## Project Structure
