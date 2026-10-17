@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>EmailCheck — Know Before You Send</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:    #0A0F1E;
+    --navy2:   #111827;
+    --navy3:   #1C2537;
+    --teal:    #00D4A8;
+    --teal2:   #00B38F;
+    --white:   #F0F4FF;
+    --muted:   #8892A4;
+    --border:  #1E2D45;
+    --green:   #10B981;
+    --red:     #EF4444;
+    --yellow:  #F59E0B;
+    --blue:    #3B82F6;
+  }
+
+  html, body {
+    background: var(--navy);
+    color: var(--white);
+    font-family: 'Space Grotesk', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* ─── NAV ─── */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 40px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--navy);
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 18px;
+    color: var(--teal);
+    letter-spacing: -0.5px;
+  }
+
+  .logo span { color: var(--white); }
+
+  .nav-badge {
+    background: var(--navy3);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* ─── HERO ─── */
+  .hero {
+    text-align: center;
+    padding: 80px 20px 60px;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+  .hero-eyebrow {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 24px;
+  }
+
+  .hero h1 {
+    font-size: clamp(36px, 6vw, 64px);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -2px;
+    margin-bottom: 20px;
+  }
+
+  .hero h1 em {
+    font-style: normal;
+    color: var(--teal);
+  }
+
+  .hero p {
+    font-size: 16px;
+    color: var(--muted);
+    line-height: 1.7;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  /* ─── TABS ─── */
+  .tabs-wrap {
+    max-width: 680px;
+    margin: 0 auto 60px;
+    padding: 0 20px;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--navy3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 24px;
+  }
+
+  .tab-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 10px 20px;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .tab-btn.active {
+    background: var(--teal);
+    color: var(--navy);
+    font-weight: 600;
+  }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ─── SINGLE CHECK ─── */
+  .check-card {
+    background: var(--navy2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 12px;
+  }
+
+  .input-row input {
+    flex: 1;
+    background: var(--navy);
+    border: 1px solid var(--border);
+    color: var(--white);
+    font-family: 'Space Mono', monospace;
+    font-size: 15px;
+    padding: 14px 18px;
+    border-radius: 10px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .input-row input::placeholder { color: var(--muted); }
+
+  .input-row input:focus {
+    border-color: var(--teal);
+  }
+
+  .btn-check {
+    background: var(--teal);
+    color: var(--navy);
+    border: none;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    padding: 14px 28px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    white-space: nowrap;
+  }
+
+  .btn-check:hover { background: var(--teal2); }
+  .btn-check:active { transform: scale(0.97); }
+
+  .btn-check:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* ─── RESULT ─── */
+  #result-area { margin-top: 24px; display: none; }
+
+  .result-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 24px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+
+  .result-header.VALID { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); }
+  .result-header.INVALID { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); }
+  .result-header.UNCERTAIN { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); }
+  .result-header.RISKY { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); }
+
+  .result-icon { font-size: 32px; }
+
+  .result-label {
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .result-status {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  .result-status.VALID { color: var(--green); }
+  .result-status.INVALID { color: var(--red); }
+  .result-status.UNCERTAIN { color: var(--blue); }
+  .result-status.RISKY { color: var(--yellow); }
+
+  .result-email {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .safe-badge {
+    margin-left: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+
+  .safe-pill {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 20px;
+  }
+
+  .safe-pill.yes { background: rgba(16,185,129,0.2); color: var(--green); }
+  .safe-pill.no { background: rgba(239,68,68,0.2); color: var(--red); }
+
+  .checks-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .check-item {
+    background: var(--navy);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+
+  .check-item-label {
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .check-item-value {
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .dot.green { background: var(--green); }
+  .dot.red { background: var(--red); }
+  .dot.yellow { background: var(--yellow); }
+  .dot.blue { background: var(--blue); }
+  .dot.grey { background: var(--muted); }
+
+  .check-item-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+
+  /* ─── BULK ─── */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 14px;
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--teal);
+    background: rgba(0,212,168,0.04);
+  }
+
+  .upload-icon { font-size: 40px; margin-bottom: 12px; }
+
+  .upload-zone h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .upload-zone p {
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .upload-zone input[type="file"] { display: none; }
+
+  .btn-upload {
+    display: inline-block;
+    margin-top: 20px;
+    background: transparent;
+    border: 1px solid var(--teal);
+    color: var(--teal);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-upload:hover { background: var(--teal); color: var(--navy); }
+
+  .bulk-note {
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 12px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  #bulk-result { margin-top: 24px; display: none; }
+
+  .bulk-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .bulk-stat {
+    background: var(--navy);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+  }
+
+  .bulk-stat-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .bulk-stat-num.green { color: var(--green); }
+  .bulk-stat-num.red { color: var(--red); }
+  .bulk-stat-num.blue { color: var(--blue); }
+  .bulk-stat-num.yellow { color: var(--yellow); }
+
+  .bulk-stat-label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .bulk-table {
+    background: var(--navy);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .bulk-table table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .bulk-table th {
+    background: var(--navy3);
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .bulk-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'Space Mono', monospace;
+  }
+
+  .bulk-table tr:last-child td { border-bottom: none; }
+
+  .bulk-table tr:hover td { background: var(--navy3); }
+
+  .status-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .status-badge.VALID { background: rgba(16,185,129,0.15); color: var(--green); }
+  .status-badge.INVALID { background: rgba(239,68,68,0.15); color: var(--red); }
+  .status-badge.UNCERTAIN { background: rgba(59,130,246,0.15); color: var(--blue); }
+  .status-badge.RISKY { background: rgba(245,158,11,0.15); color: var(--yellow); }
+
+  /* ─── HOW IT WORKS ─── */
+  .how-section {
+    max-width: 800px;
+    margin: 0 auto 80px;
+    padding: 0 20px;
+  }
+
+  .section-eyebrow {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 16px;
+  }
+
+  .how-section h2 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    margin-bottom: 32px;
+  }
+
+  .steps-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+
+  .step-card {
+    background: var(--navy2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px 20px;
+    position: relative;
+  }
+
+  .step-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--teal);
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+  }
+
+  .step-icon { font-size: 24px; margin-bottom: 12px; }
+
+  .step-card h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .step-card p {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* ─── LOADING ─── */
+  .spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--navy);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ─── FOOTER ─── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 24px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  footer p { font-size: 12px; color: var(--muted); }
+
+  .footer-logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    color: var(--teal);
+  }
+
+  @media (max-width: 600px) {
+    nav { padding: 16px 20px; }
+    .hero { padding: 40px 20px; }
+    .input-row { flex-direction: column; }
+    .checks-grid { grid-template-columns: 1fr; }
+    .bulk-summary { grid-template-columns: 1fr 1fr; }
+    .steps-row { grid-template-columns: 1fr 1fr; }
+    footer { flex-direction: column; gap: 8px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">Email<span>Check</span></div>
+  <div class="nav-badge">v1.0 · Python Powered</div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <p class="hero-eyebrow">Email Validation Tool</p>
+  <h1>Know before<br/>you <em>send.</em></h1>
+  <p>Validate any email address in seconds. Check syntax, domain health, mailbox existence, and risk level — all in one place.</p>
+</div>
+
+<!-- MAIN TOOL -->
+<div class="tabs-wrap">
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('single', this)">Single Email</button>
+    <button class="tab-btn" onclick="switchTab('bulk', this)">Bulk CSV Upload</button>
+  </div>
+
+  <!-- SINGLE CHECK -->
+  <div id="tab-single" class="tab-content active">
+    <div class="check-card">
+      <div class="input-row">
+        <input type="email" id="email-input" placeholder="Enter email address..." onkeydown="if(event.key==='Enter')checkEmail()"/>
+        <button class="btn-check" id="check-btn" onclick="checkEmail()">Check Email</button>
+      </div>
+
+      <div id="result-area">
+        <!-- Result injected here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- BULK CHECK -->
+  <div id="tab-bulk" class="tab-content">
+    <div class="check-card">
+      <div class="upload-zone" id="upload-zone" onclick="document.getElementById('csv-file').click()" ondragover="handleDragOver(event)" ondrop="handleDrop(event)">
+        <input type="file" id="csv-file" accept=".csv" onchange="handleFileSelect(event)"/>
+        <div class="upload-icon">📂</div>
+        <h3>Drop your CSV file here</h3>
+        <p>Must contain an email column</p>
+        <button class="btn-upload" onclick="event.stopPropagation(); document.getElementById('csv-file').click()">Browse Files</button>
+      </div>
+      <p class="bulk-note">⚠️ Demo validates first 20 emails only</p>
+
+      <div id="bulk-result">
+        <!-- Bulk results injected here -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="how-section">
+  <p class="section-eyebrow">Under the Hood</p>
+  <h2>Four layers of validation</h2>
+  <div class="steps-row">
+    <div class="step-card">
+      <div class="step-num">01</div>
+      <div class="step-icon">🔤</div>
+      <h4>Syntax Check</h4>
+      <p>Validates the email format using regex. Checks structure, allowed characters, and proper domain format.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">02</div>
+      <div class="step-icon">🌐</div>
+      <h4>Domain Check</h4>
+      <p>Queries DNS to confirm the domain exists and has MX records — meaning it can actually receive emails.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">03</div>
+      <div class="step-icon">📬</div>
+      <h4>SMTP Check</h4>
+      <p>Connects to the mail server and asks if the specific mailbox exists — without sending any email.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">04</div>
+      <div class="step-icon">🛡️</div>
+      <h4>Risk Rating</h4>
+      <p>Identifies role-based addresses (info@, admin@) and suspicious patterns that indicate low deliverability.</p>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">EmailCheck</div>
+  <p>Built with Python · Flask · dnspython</p>
+</footer>
+
+<script>
+  // ─── TAB SWITCHING ───
+  function switchTab(tab, btn) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  // ─── SINGLE EMAIL CHECK ───
+  async function checkEmail() {
+    const input = document.getElementById('email-input');
+    const btn = document.getElementById('check-btn');
+    const area = document.getElementById('result-area');
+    const email = input.value.trim();
+
+    if (!email) {
+      input.focus();
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Checking...';
+    area.style.display = 'none';
+
+    try {
+      const res = await fetch('/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+      renderResult(data, area);
+    } catch (err) {
+      area.style.display = 'block';
+      area.innerHTML = `<div style="color:var(--red);padding:16px;text-align:center;">Connection error. Is the server running?</div>`;
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = 'Check Email';
+  }
+
+  function renderResult(data, area) {
+    const icons = { VALID: '✅', INVALID: '❌', UNCERTAIN: '⚠️', RISKY: '🚨' };
+    const labels = {
+      VALID: 'Safe to Send',
+      INVALID: 'Do Not Send',
+      UNCERTAIN: 'Proceed with Caution',
+      RISKY: 'High Risk — Avoid'
+    };
+
+    const smtpDot = {
+      EXISTS: 'green', NOT_EXISTS: 'red',
+      BLOCKED_OR_CATCHALL: 'yellow', UNCERTAIN: 'blue',
+      NOT_CHECKED: 'grey', SKIPPED: 'grey'
+    };
+
+    const riskDot = { LOW: 'green', MEDIUM: 'yellow', HIGH: 'red', UNKNOWN: 'grey' };
+
+    const checks = data.checks;
+    const smtp = checks.smtp;
+    const risk = checks.risk;
+
+    area.style.display = 'block';
+    area.innerHTML = `
+      <div class="result-header ${data.overall}">
+        <div class="result-icon">${icons[data.overall] || '❓'}</div>
+        <div>
+          <div class="result-label">Validation Result</div>
+          <div class="result-status ${data.overall}">${labels[data.overall] || data.overall}</div>
+          <div class="result-email">${data.email}</div>
+        </div>
+        <div class="safe-badge">
+          <div class="result-label">Safe to send</div>
+          <div class="safe-pill ${data.safe_to_send ? 'yes' : 'no'}">${data.safe_to_send ? 'YES' : 'NO'}</div>
+        </div>
+      </div>
+
+      <div class="checks-grid">
+        <div class="check-item">
+          <div class="check-item-label">Syntax</div>
+          <div class="check-item-value">
+            <div class="dot ${checks.syntax.passed ? 'green' : 'red'}"></div>
+            ${checks.syntax.passed ? 'Valid format' : 'Invalid format'}
+          </div>
+          <div class="check-item-sub">${checks.syntax.message}</div>
+        </div>
+
+        <div class="check-item">
+          <div class="check-item-label">Domain & MX Records</div>
+          <div class="check-item-value">
+            <div class="dot ${checks.domain.passed ? 'green' : 'red'}"></div>
+            ${checks.domain.passed ? 'Domain active' : 'Domain failed'}
+          </div>
+          <div class="check-item-sub">${checks.domain.message}</div>
+        </div>
+
+        <div class="check-item">
+          <div class="check-item-label">SMTP Mailbox</div>
+          <div class="check-item-value">
+            <div class="dot ${smtpDot[smtp.status] || 'grey'}"></div>
+            ${smtp.status.replace(/_/g, ' ')}
+          </div>
+          <div class="check-item-sub">${smtp.message}</div>
+        </div>
+
+        <div class="check-item">
+          <div class="check-item-label">Risk Level</div>
+          <div class="check-item-value">
+            <div class="dot ${riskDot[risk.level] || 'grey'}"></div>
+            ${risk.level}
+          </div>
+          <div class="check-item-sub">${risk.message}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  // ─── BULK CHECK ───
+  function handleDragOver(e) {
+    e.preventDefault();
+    document.getElementById('upload-zone').classList.add('drag-over');
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('upload-zone').classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) uploadCSV(file);
+  }
+
+  function handleFileSelect(e) {
+    const file = e.target.files[0];
+    if (file) uploadCSV(file);
+  }
+
+  async function uploadCSV(file) {
+    const zone = document.getElementById('upload-zone');
+    const result = document.getElementById('bulk-result');
+
+    zone.innerHTML = `<div class="upload-icon"><span class="spinner" style="width:32px;height:32px;border-width:3px;border-color:var(--teal);border-top-color:transparent;"></span></div><h3>Validating emails...</h3><p>This may take a few minutes</p>`;
+    result.style.display = 'none';
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch('/validate-bulk', { method: 'POST', body: formData });
+      const data = await res.json();
+
+      if (data.error) {
+        zone.innerHTML = `<div class="upload-icon">❌</div><h3>${data.error}</h3>`;
+        return;
+      }
+
+      zone.innerHTML = `<div class="upload-icon">✅</div><h3>Validation complete!</h3><p>${file.name}</p>`;
+      renderBulkResult(data, result);
+
+    } catch (err) {
+      zone.innerHTML = `<div class="upload-icon">❌</div><h3>Connection error</h3><p>Is the server running?</p>`;
+    }
+  }
+
+  function renderBulkResult(data, area) {
+    const rows = data.results.map(r => `
+      <tr>
+        <td>${r.email}</td>
+        <td><span class="status-badge ${r.overall}">${r.overall}</span></td>
+        <td>${r.checks.smtp.status.replace(/_/g, ' ')}</td>
+        <td>${r.checks.risk.level}</td>
+        <td>${r.safe_to_send ? '✅ Yes' : '❌ No'}</td>
+      </tr>
+    `).join('');
+
+    area.style.display = 'block';
+    area.innerHTML = `
+      <div class="bulk-summary">
+        <div class="bulk-stat">
+          <div class="bulk-stat-num green">${data.valid}</div>
+          <div class="bulk-stat-label">Valid</div>
+        </div>
+        <div class="bulk-stat">
+          <div class="bulk-stat-num red">${data.invalid}</div>
+          <div class="bulk-stat-label">Invalid</div>
+        </div>
+        <div class="bulk-stat">
+          <div class="bulk-stat-num blue">${data.uncertain}</div>
+          <div class="bulk-stat-label">Uncertain</div>
+        </div>
+        <div class="bulk-stat">
+          <div class="bulk-stat-num yellow">${data.risky}</div>
+          <div class="bulk-stat-label">Risky</div>
+        </div>
+      </div>
+
+      <div class="bulk-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Status</th>
+              <th>SMTP</th>
+              <th>Risk</th>
+              <th>Safe</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
+  }
+</script>
+</body>
+</html>
